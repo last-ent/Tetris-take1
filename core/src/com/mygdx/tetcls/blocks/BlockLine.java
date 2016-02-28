@@ -1,9 +1,11 @@
 package com.mygdx.tetcls.blocks;
 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.tetcls.GameConstants;
+import com.mygdx.tetcls.Grid;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -20,6 +22,9 @@ public class BlockLine {
     private boolean isResting = false;
     private boolean isVertical = true;
     private boolean isFast = false;
+    private static enum RowOrColumn {
+        ROW, COLUMN
+    }
     private static Comparator<Rectangle> BlockLineComparator = new Comparator<Rectangle>() {
         @Override
         public int compare(Rectangle o1, Rectangle o2) {
@@ -101,7 +106,7 @@ public class BlockLine {
     }
 
     public void updateOnDelta(float delta, boolean toTurn, boolean toLeft,
-                              boolean toRight, boolean isDownPressed, Rectangle arena) {
+                              boolean toRight, boolean isDownPressed, Grid gameGrid) {
         if (toTurn) isVertical = !isVertical;
         if (toLeft) setX(getLeftmostBlock().getX() - GameConstants.BLOCK_SIDE_SIZE);
         else if (toRight) setX(getLeftmostBlock().getX() + GameConstants.BLOCK_SIDE_SIZE);
@@ -111,7 +116,7 @@ public class BlockLine {
                 getLowestBlock().getY(),
                 GameConstants.BLOCK_SIDE_SIZE  * delta * GameConstants.BLOCK_SPEED_SCROLLING_FACTOR
             );
-        correctCollision(arena);
+        correctCollision(gameGrid);
     }
 
     public void render(ShapeRenderer shapeRenderer) {
@@ -120,33 +125,68 @@ public class BlockLine {
         }
     }
 
+    public int getRowOrColumn(Rectangle rect, RowOrColumn selector) {
+        int index = -1;
+        switch (selector){
+            case ROW:
+                index = (int) ((rect.getY() - GameConstants.GAME_SCREEN_START_Y)/GameConstants.BLOCK_SIDE_SIZE);
+//                index = (int) ((rect.getY() + GameConstants.BLOCK_SIDE_SIZE - rect.getY())/GameConstants.BLOCK_SIDE_SIZE);
+                break;
+            case COLUMN:
+                index = (int) ((rect.getX() - GameConstants.GAME_SCREEN_START_X)/ GameConstants.BLOCK_SIDE_SIZE);
+//                index = (int) ((rect.getX() - rect.getX())/GameConstants.BLOCK_SIDE_SIZE);
+        }
+        return index;
+    }
+//
+//    public boolean isBottomColliding(Rectangle lowestBlock, Grid gameGrid) {
+//        return lowestBlock.getY() < surfaceRect.getY();
+//    }
+
+    public Rectangle getLowestSurfaceRect(Rectangle lowestBlock, Grid gameGrid) {
+        int rectColumn = getRowOrColumn(lowestBlock, RowOrColumn.COLUMN);
+        Rectangle surfaceRect = gameGrid.getTopmostRectAtColumn(rectColumn);
+        if (surfaceRect == null)
+            surfaceRect = gameGrid.getArena();
+        return surfaceRect;
+    }
+
     /***
      * Catch all method to deal with
      * * Stop once the block hits the bottom.
      * * Nudge the block to left or right depending on which wall it hits.
      * * ***More to Come***
+     *
+     * TODO: Update the method so that it will look for collision wrto passive blocks.
      */
-    public void correctCollision(Rectangle arena) {
+    public void correctCollision(Grid gameGrid) {
         Rectangle lowestBlock = getLowestBlock();
         Rectangle rightmostBlock = getRightmostBlock();
         Rectangle leftmostBlock = getLeftmostBlock();
 
-        if (lowestBlock.getY() < arena.getY()) {
-            setY(arena.getY() + GameConstants.BLOCK_SIDE_SIZE, GameConstants.BLOCK_SIDE_SIZE);
+        Rectangle relevantLowerSurfaceRect = getLowestSurfaceRect(lowestBlock, gameGrid);
+
+//        if (lowestBlock.getY() < arena.getY()) {
+//        System.out.println("lowest block: " + lowestBlock +" relevant lowersurface: " + relevantLowerSurfaceRect);
+        if(lowestBlock.getY() <= relevantLowerSurfaceRect.getY()){
+            float height = GameConstants.BLOCK_SIDE_SIZE;
+            if(relevantLowerSurfaceRect.getY() > GameConstants.GAME_SCREEN_START_Y)
+                height += GameConstants.BLOCK_SIDE_SIZE;
+            setY(relevantLowerSurfaceRect.getY() + height, GameConstants.BLOCK_SIDE_SIZE);
             isResting = true;
         }
-        if (leftmostBlock.getX() <= arena.getX()) {
-            setY(lowestBlock.getY()  + GameConstants.BLOCK_SIDE_SIZE, GameConstants.BLOCK_SIDE_SIZE);
-            setX(arena.getX());
-        }
-        float rightBlockX = rightmostBlock.getX() + rightmostBlock.getWidth();
-//        System.out.println("rb.x: " + rightmostBlock.getX() +" ar.x: " + (arena.getX() + arena.getX() ) + " arena.getWidth() + arena.getX()? " + ( rightBlockX  >= arena.getWidth() + arena.getX()));
-        if( rightBlockX  > arena.getWidth() + arena.getX()){
-            float arenaXEnd = arena.getX() + arena.getWidth();
-            float blocksToNudge = GameConstants.BLOCK_SIDE_SIZE *(isVertical? 1: 4);
-
-            setX(arenaXEnd - blocksToNudge);
-        }
+//        if (leftmostBlock.getX() <= arena.getX()) {
+//            setY(lowestBlock.getY()  + GameConstants.BLOCK_SIDE_SIZE, GameConstants.BLOCK_SIDE_SIZE);
+//            setX(arena.getX());
+//        }
+//        float rightBlockX = rightmostBlock.getX() + rightmostBlock.getWidth();
+////        System.out.println("rb.x: " + rightmostBlock.getX() +" ar.x: " + (arena.getX() + arena.getX() ) + " arena.getWidth() + arena.getX()? " + ( rightBlockX  >= arena.getWidth() + arena.getX()));
+//        if( rightBlockX  > arena.getWidth() + arena.getX()){
+//            float arenaXEnd = arena.getX() + arena.getWidth();
+//            float blocksToNudge = GameConstants.BLOCK_SIDE_SIZE *(isVertical? 1: 4);
+//
+//            setX(arenaXEnd - blocksToNudge);
+//        }
     }
 
     public Rectangle getLowestBlock(){

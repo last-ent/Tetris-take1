@@ -26,7 +26,7 @@ public class GameScreen extends ScreenAdapter {
             GameConstants.GAME_SCREEN_START_X, GameConstants.GAME_SCREEN_START_Y,
             GameConstants.GAME_WIDTH, GameConstants.GAME_HEIGHT
     );
-    private Grid arenaGrid;
+    private Grid arenaGrid = new Grid(tetrisArena);;
 
     private ShapeRenderer shapeRenderer;
     private Viewport viewport;
@@ -54,7 +54,6 @@ public class GameScreen extends ScreenAdapter {
 
 //        createNewBlock();
         blockLine = new BlockLine(GameConstants.BLOCK_START_X, GameConstants.BLOCK_START_Y/3);
-        arenaGrid = new Grid(tetrisArena);
     }
 
     @Override
@@ -130,7 +129,7 @@ public class GameScreen extends ScreenAdapter {
     public void updateOnDelta(float delta) {
         renderGrid();
         checkForEvents(delta);
-        blockLine.updateOnDelta(delta, isSpacePressed, isLeftPressed, isRightPressed, isDownPressed, tetrisArena);
+        blockLine.updateOnDelta(delta, isSpacePressed, isLeftPressed, isRightPressed, isDownPressed, arenaGrid);
         shapeRenderer.rect(tetrisArena.getX(), tetrisArena.getY(), tetrisArena.width, tetrisArena.height);
 
         if(blockLine.isBlockResting()) {

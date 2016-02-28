@@ -17,7 +17,7 @@ public class GameConstants {
     public static final float GAME_SCREEN_START_Y = BLOCK_SIDE_SIZE * 2;
     public static final float WORLD_WIDTH = 15 * BLOCK_SIDE_SIZE;
     public static final float WORLD_HEIGHT = 25 * BLOCK_SIDE_SIZE;
-    public static final int BLOCK_SPEED_SCROLLING_FACTOR = 5;
+    public static final int BLOCK_SPEED_SCROLLING_FACTOR = 20;
 
 
     public static final float BLOCK_START_X = (GameConstants.GAME_SCREEN_START_X + GameConstants.GAME_WIDTH)/2;
